@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/black.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section><h1>Canvas</h1></section>
+				<section>
+					<section>
+						<h2>What is canvas?</h2>
+						<div>
+							<img src="assets/canvas.png" alt="Default canvas grid">
+						</div>
+					</section>
+      				<section>
+						<h2>History</h2>
+						<ul>
+							<li class="fragment fade-up">2004 Safari browser</li>
+							<li class="fragment fade-up">2005 Gecko browsers</li>
+							<li class="fragment fade-up">2006 Opera</li>
+							<li class="fragment fade-up">2014 standardized by WHATWG</li>
+							<li class="fragment fade-up">Google extension for IE</li>
+							<li class="fragment fade-up">Canvas 3D</li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Canvas features</h2>
+						<div style="display:flex; justify-content:space-between">
+							<ul class="fragment fade-right">
+								<li>rectangles</li>
+								<li>polygon shapes</li>
+								<li>circles and arcs</li>
+								<li>Bezier curves</li>
+								<li>fill methods</li>
+							</ul>
+							<ul class="fragment fade-up">
+								<li>text</li>
+								<li>images</li>
+								<li>videos</li>
+							</ul>
+							<ul class="fragment fade-left">
+								<li>transformation</li>
+								<li>rotating</li>
+								<li>scaling</li>
+								<li>animation</li>
+								<li>pixel manipulation</li>
+							</ul>
+						</div>
+					</section>
+					<section>
+						<h2>Usage</h2>
+						<ul>
+							<li>animation</li>
+							<li>drawing graphics</li>
+							<li>2D games</li>
+							<li>data visualization</li>
+							<li>photo-manipulation</li>
+							<li>real-time video processing</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Example 1</h2>
+						<h3>Game of Life</h3>
+						<canvas id="life" width="300" height="300"
+							style="background: white;"></canvas>
+						<div>
+							<button id="life-start">Start</button>
+							<button id="life-stop">Stop</button>
+						</div>
+						<script>
+							var canvas = document.getElementById('life');
+							var ctx = canvas.getContext('2d');
+							var mas=[];
+							var count=0;
+							var timer;
+							canvas.onclick = function(event){
+								var x = event.offsetX;
+								var y = event.offsetY;
+								x = Math.floor(x/10); //300 /10 = 30
+								y = Math.floor(y/10); //300 /10 = 
+								mas[y][x]=1;
+								drawField();
+							}
+
+							function goLife(){
+								var n=30, m=30;
+								for (var i=0; i<m; i++){
+									mas[i]=[];
+									for (var j=0; j<n; j++){
+										mas[i][j]=0;
+									}
+								}
+							}
+							goLife();
+
+							function drawField(){
+								ctx.clearRect(0, 0, 300, 300);
+								for (var i=0; i<30; i++){
+									for (var j=0; j<30; j++){
+										if (mas[i][j]==1){
+											ctx.fillRect(j*10, i*10, 10, 10);
+										}
+									}
+								}
+							}
+
+							function startLife(){
+								//моделирование жизни
+								var mas2 = [];
+								for (var i=0; i<30; i++){
+									mas2[i]=[];
+									for (var j=0; j<30; j++){
+										var neighbors = 0;
+										if (mas[fpm(i)-1][j]==1) neighbors++;//up
+										if (mas[i][fpp(j)+1]==1) neighbors++;//right
+										if (mas[fpp(i)+1][j]==1) neighbors++;//bottom
+										if (mas[i][fpm(j)-1]==1) neighbors++;//left
+										if (mas[fpm(i)-1][fpp(j)+1]==1) neighbors++;
+										if (mas[fpp(i)+1][fpp(j)+1]==1) neighbors++;
+										if (mas[fpp(i)+1][fpm(j)-1]==1) neighbors++;
+										if (mas[fpm(i)-1][fpm(j)-1]==1) neighbors++;
+										(neighbors==2 || neighbors==3) ? mas2[i][j]=1 : mas2[i][j]==0;
+									}
+								}
+								mas = mas2;
+								drawField();
+								timer = setTimeout(startLife, 400);
+							}
+
+							function stopLife(){
+								clearTimeout(timer);
+								goLife();
+								drawField();
+							}
+
+							function fpm(i){
+								if(i==0) return 30;
+								else return i;
+							}
+							function fpp(i){
+								if(i==29) return -1;
+								else return i;
+							}
+
+							document.getElementById('life-start').onclick = startLife;
+							document.getElementById('life-stop').onclick = stopLife;
+						</script>
+					</section>
+					<section>
+						<h2>Example 2</h2>
+						<h3>Advanced animation</h3>
+						<canvas id="rain" width="600" height="300"></canvas>
+						<script>
+							//initial
+							var c = document.getElementById('rain');
+							var w = c.width,
+							h = c.height,
+							ctx2 = c.getContext('2d'),
+							//parameters
+							total = w,
+							accelleration = .05,
+							//afterinitial calculations
+							size = w/total,
+							occupation = w/total,
+							repaintColor = 'rgba(0, 0, 0, .04)'
+							colors = [],
+							dots = [],
+							dotsVel = [];
+							//setting the colors' hue
+							//and y level for all dots
+							var portion = 360/total;
+							for(var i = 0; i < total; ++i){
+							colors[i] = portion * i;
+							dots[i] = h;
+							dotsVel[i] = 10;
+							}
+
+							function anim(){
+							window.requestAnimationFrame(anim);
+							ctx2.fillStyle = repaintColor;
+							ctx2.fillRect(0, 0, w, h);
+							for(var i = 0; i < total; ++i){
+								var currentY = dots[i] - 1;
+								dots[i] += dotsVel[i] += accelleration;
+								
+								ctx2.fillStyle = 'hsl('+ colors[i] + ', 80%, 50%)';
+								ctx2.fillRect(occupation * i, currentY, size, dotsVel[i] + 1);
+								
+								if(dots[i] > h && Math.random() < .01){
+								dots[i] = dotsVel[i] = 0;
+								}
+							}
+							}
+							anim();
+						</script>
+					</section>
+					<section>
+						<h2>Example 3</h2>
+						<h3>Advanced animation</h3>
+						<canvas id="lightnings" width="600" height="300"
+							style="background: linear-gradient(#000, #151515);"></canvas>
+						<script>
+							var canvasLightning = function(c, cw, ch){
+								this.init = function(){
+								this.loop();
+								};    
+								var _this = this;
+								this.c = c;
+								this.ctx3 = c.getContext('2d');
+								this.cw = cw;
+								this.ch = ch;
+								this.mx = 0;
+								this.my = 0;
+								
+								this.lightning = [];
+								this.lightTimeCurrent = 0;
+								this.lightTimeTotal = 50;
+								
+							/*=============================================================================*/  
+							/* Utility Functions
+							/*=============================================================================*/        
+							this.rand = function(rMi, rMa){return ~~((Math.random()*(rMa-rMi+1))+rMi);};
+							this.hitTest = function(x1, y1, w1, h1, x2, y2, w2, h2){return !(x1 + w1 < x2 || x2 + w2 < x1 || y1 + h1 < y2 || y2 + h2 < y1);};
+								
+							/*=============================================================================*/	
+							/* Create Lightning
+							/*=============================================================================*/
+								this.createL= function(x, y, canSpawn){					
+								this.lightning.push({
+									x: x,
+									y: y,
+									xRange: this.rand(5, 30),
+									yRange: this.rand(5, 25),
+									path: [{
+									x: x,
+									y: y	
+									}],
+									pathLimit: this.rand(10, 35),
+									canSpawn: canSpawn,
+									hasFired: false
+								});
+								};
+								
+							/*=============================================================================*/	
+							/* Update Lightning
+							/*=============================================================================*/
+								this.updateL = function(){
+								var i = this.lightning.length;
+								while(i--){
+									var light = this.lightning[i];						
+									
+									
+									light.path.push({
+									x: light.path[light.path.length-1].x + (this.rand(0, light.xRange)-(light.xRange/2)),
+									y: light.path[light.path.length-1].y + (this.rand(0, light.yRange))
+									});
+									
+									if(light.path.length > light.pathLimit){
+									this.lightning.splice(i, 1)
+									}
+									light.hasFired = true;
+								};
+								};
+								
+							/*=============================================================================*/	
+							/* Render Lightning
+							/*=============================================================================*/
+								this.renderL = function(){
+								var i = this.lightning.length;
+								while(i--){
+									var light = this.lightning[i];
+									
+									this.ctx3.strokeStyle = 'hsla(0, 100%, 100%, '+this.rand(10, 100)/100+')';
+									this.ctx3.lineWidth = 1;
+									if(this.rand(0, 30) == 0){
+									this.ctx3.lineWidth = 2;	
+									}
+									if(this.rand(0, 60) == 0){
+									this.ctx3.lineWidth = 3;	
+									}
+									if(this.rand(0, 90) == 0){
+									this.ctx3.lineWidth = 4;	
+									}
+									if(this.rand(0, 120) == 0){
+									this.ctx3.lineWidth = 5;	
+									}
+									if(this.rand(0, 150) == 0){
+									this.ctx3.lineWidth = 6;	
+									}	
+									
+									this.ctx3.beginPath();
+									
+									var pathCount = light.path.length;
+									this.ctx3.moveTo(light.x, light.y);
+									for(var pc = 0; pc < pathCount; pc++){	
+									
+									this.ctx3.lineTo(light.path[pc].x, light.path[pc].y);
+									
+									if(light.canSpawn){
+										if(this.rand(0, 100) == 0){
+										light.canSpawn = false;
+										this.createL(light.path[pc].x, light.path[pc].y, false);
+										}	
+									}
+									}
+									
+									if(!light.hasFired){
+									this.ctx3.fillStyle = 'rgba(255, 255, 255, '+this.rand(4, 12)/100+')';
+									this.ctx3.fillRect(0, 0, this.cw, this.ch);	
+									}
+									
+									if(this.rand(0, 30) == 0){
+									this.ctx3.fillStyle = 'rgba(255, 255, 255, '+this.rand(1, 3)/100+')';
+									this.ctx3.fillRect(0, 0, this.cw, this.ch);	
+									}	
+									
+									this.ctx3.stroke();
+								};
+								};
+								
+							/*=============================================================================*/	
+							/* Lightning Timer
+							/*=============================================================================*/
+								this.lightningTimer = function(){
+								this.lightTimeCurrent++;
+								if(this.lightTimeCurrent >= this.lightTimeTotal){
+									var newX = this.rand(100, cw - 100);
+									var newY = this.rand(0, ch / 2); 
+									var createCount = this.rand(1, 3);
+									while(createCount--){							
+									this.createL(newX, newY, true);
+									}
+									this.lightTimeCurrent = 0;
+									this.lightTimeTotal = this.rand(30, 100);
+								}
+								}
+								
+							/*=============================================================================*/	
+							/* Clear Canvas
+							/*=============================================================================*/
+								this.clearCanvas = function(){
+									this.ctx3.globalCompositeOperation = 'destination-out';
+									this.ctx3.fillStyle = 'rgba(0,0,0,'+this.rand(1, 30)/100+')';
+									this.ctx3.fillRect(0,0,this.cw,this.ch);
+									this.ctx3.globalCompositeOperation = 'source-over';
+								};
+								
+							/*=============================================================================*/	
+							/* Animation Loop
+							/*=============================================================================*/
+								this.loop = function(){
+									var loopIt = function(){
+									requestAnimationFrame(loopIt, _this.c);
+									_this.clearCanvas();
+									_this.updateL();
+									_this.lightningTimer();
+									_this.renderL();	
+								};
+								loopIt();					
+								};
+								
+							};
+							
+							/*=============================================================================*/	
+							/* Check Canvas Support
+							/*=============================================================================*/
+							var isCanvasSupported = function(){
+								var elem = document.createElement('canvas');
+								return !!(elem.getContext && elem.getContext('2d'));
+							};
+							
+							/*=============================================================================*/	
+							/* Setup requestAnimationFrame
+							/*=============================================================================*/
+							var setupRAF = function(){
+								var lastTime = 0;
+								var vendors = ['ms', 'moz', 'webkit', 'o'];
+								for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x){
+								window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+								window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
+								};
+								
+								if(!window.requestAnimationFrame){
+								window.requestAnimationFrame = function(callback, element){
+									var currTime = new Date().getTime();
+									var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+									var id = window.setTimeout(function() { callback(currTime + timeToCall); }, timeToCall);
+									lastTime = currTime + timeToCall;
+									return id;
+								};
+								};
+								
+								if (!window.cancelAnimationFrame){
+								window.cancelAnimationFrame = function(id){
+									clearTimeout(id);
+								};
+								};
+							};			
+							
+							/*=============================================================================*/	
+							/* Define Canvas and Initialize
+							/*=============================================================================*/
+							// (window).load(function(){	
+							//   if(isCanvasSupported){
+								var c3 = document.getElementById('lightnings');
+								var cw = c3.width;
+								var ch = c3.height;	
+								var cl = new canvasLightning(c3, cw, ch);				
+								
+								setupRAF();
+								cl.init();
+						</script>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Benefits</h2>
+						<ul>
+							<li>high performance</li>
+							<li>hardware acceleration</li>
+							<li>pixel manipulation</li>
+							<li>various libraries</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Drawbacks</h2>
+						<ul>
+							<li>RAM problems</li>
+							<li>not a DOM-element</li>
+							<li>bitmap image</li>
+							<li>canvas fingerprinting</li>
+							<li>accessibility problems</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Alternatives</h2>
+						<ul>
+							<li>div</li>
+							<li>SVG</li>
+							<li>canvas</li>
+						</ul>
+					</section>
+				</section>
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+		</script>
+	</body>
+</html>
